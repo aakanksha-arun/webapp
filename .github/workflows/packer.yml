@@ -1,0 +1,70 @@
+name: Packer Build
+
+on:
+    push:
+      branches:
+        - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repository code
+      uses: actions/checkout@v4
+    - name: Node.js setup
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14.x'
+    - uses: ikalnytskyi/action-setup-postgres@v5
+      with:
+        username: ${{ secrets.PSQL_DB_USER }}
+        password: ${{ secrets.PSQL_DB_PASS }}
+        database: mydb
+        port: 5432
+      id: postgres
+    - name: Install dependencies
+      run: npm install
+    - name: Run tests
+      run: npx jest
+      env:
+        PSQL_DB_USER: ${{ secrets.PSQL_DB_USER }}
+        PSQL_DB_PASS: ${{ secrets.PSQL_DB_PASS }}
+        PSQL_DB: mydb
+        POSTGRES_HOST: localhost
+        PORT: 8080
+    - name: Zipping repo
+      run: | 
+        cd $GITHUB_WORKSPACE
+        zip -r webapp.zip .
+    - name: Cloud Auth
+      id: auth
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: '${{ secrets.SA_KEY}}'
+    - name: Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+    - name: gcloud CLI
+      run: gcloud info
+    - name: Packer Initialization
+      id: init
+      if: success()
+      run: packer init image.pkr.hcl
+    - name: Format packer
+      id: fmt
+      if: success()
+      run: packer fmt image.pkr.hcl
+    - name: Validate Packer
+      if: success()
+      #add db/packer vars here
+      run: packer validate image.pkr.hcl
+    - name: Build Packer
+      if: success()
+      run: packer build image.pkr.hcl
+    - name: Completion Status
+      run: echo "DONE!"    
+
+
+
+
+   

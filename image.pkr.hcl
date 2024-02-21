@@ -1,13 +1,16 @@
 variable "project_id" {
   type = string
+  default = "dev-alijahh"
 }
 
 variable "zone" {
   type = string
+  default = "us-central1-a"
 }
 
 variable "source_image_family" {
   type = string
+  default = "centos-stream-8"
 }
 
 variable "disk_size" {
@@ -37,6 +40,7 @@ variable "image_family" {
 
 variable "image_project_id" {
   type = string
+  default = "dev-alijahh"
 }
 
 variable "image_storage_locations" {
